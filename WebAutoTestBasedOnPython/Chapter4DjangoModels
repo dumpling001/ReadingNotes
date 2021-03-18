@@ -1,0 +1,113 @@
+第4章 Django模型阅读笔记（问题及解决）
+
+忘记了MySQL的密码：
+
+mysql --version
+sudo /usr/local/mysql/support-files/mysql.server stop
+
+新问题：
+ERROR! MySQL server PID file could not be found!
+
+ps -ef|grep mysqld
+502 48498 48069   0  3:18PM ttys003    0:00.01 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn mysqld
+UID PID PPID C STIME TTY TIME CMD
+
+ps 命令的作用是显示进程信息的；
+ps命令有一些参数：-e : 显示所有进程 -f : 全格式
+
+| 符号，是个管道符号，表示ps 和 grep 命令同时执行；
+
+grep 命令是查找（Global Regular Expression Print），能使用正则表达式搜索文本，然后把匹配的行显示出来；
+
+因为PID总在变，所以查了下PPID 48069，就是PID的父进程:
+ps -ef | grep
+
+kill -9 48069
+结果发现把隔壁的命令行窗口给关了。估计就是之前按网上的操作造成的新问题。
+
+再重新走一遍：
+mysql --version
+sudo /usr/local/mysql/support-files/mysql.server stop
+还是报错：ERROR! MySQL server PID file could not be found!
+
+然后恍然大悟：找不到就意味着并没有可以杀的mysql进程啊！也就是说，mysql没有开启，所以不用关。关一个不存在的东西当然会报不存在的错误啦。
+
+仍然有问题：
+ ✘ ⮀ ~ ⮀ sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables
+Password:
+2021-03-17T07:43:39.6NZ mysqld_safe Logging to '/usr/local/mysql/data/liuhuajiaodeMacBook-Air.local.err'.
+2021-03-17T07:43:39.6NZ mysqld_safe Starting mysqld daemon with databases from /usr/local/mysql/data
+2021-03-17T07:43:41.6NZ mysqld_safe mysqld from pid file /usr/local/mysql/data/liuhuajiaodeMacBook-Air.local.pid ended
+
+干脆彻底删除MySQL：
+
+Mac下干净彻底地卸载 MySQL
+
+执行下列命令
+sudo rm /usr/local/mysql
+sudo rm -rf /usr/local/mysql*
+sudo rm -rf /Library/StartupItems/MySQLCOM
+sudo rm -rf /Library/PreferencePanes/My*
+rm -rf ~/Library/PreferencePanes/My*
+sudo rm -rf /Library/Receipts/mysql*
+sudo rm -rf /Library/Receipts/MySQL*
+sudo rm -rf /var/db/receipts/com.mysql.*
+其实不同的安装方式有些东西的存储位置不一样，删除完检查一下下面这些文件是否删除了，没有的话则删除掉：
+/usr/local/Cellar 里的mysql文件
+/usr/local/var 里的mysql文件
+/tmp 里的mysql.sock, mysql.sock.lock, my.cnf文件
+pid文件和err文件都在/usr/local/var/mysql里确保删除了
+brew安装的安装包存储在/usr/local/Library/Cache/Homebrew也可以一并删除
+执行brew cleanup
+
+(就是以上操作把事情搞得更坏了。
+还有在/usr/local/下运行了sudo mv xxx指令，想直接把mysql安装文件直接移过来，没想到竟然把原来的文件都删了。)
+
+下载dmg文件后安装出现问题：
+mysql -u root -p
+zsh: command not found: mysql
+
+配置路径
+用文本编辑器打开 .bash_profile 文件
+
+vim ~/.bash_profile
+
+加入
+
+PATH=$PATH:/usr/local/mysql/bin
+
+并保存（vim 中先按 Esc键，在输入 :wq ）
+在命令行输入
+
+source ~/.bash_profile
+路径就配置好了。
+
+prompt_git:5: = not found
+发现最后添加的这个变量，少输入了一个$符号
+
+解决办法：后来把所有的报错涉及的语句全部都删了。
+
+原因是：不小心把usr/local下的东西都删了
+
+重新安装，还是说密码错误，只好再次尝试：
+cd /usr/local/mysql/bin/
+2.关闭mysql服务
+sudo /usr/local/mysql/support-files/mysql.server stop
+3.安全模式启动mysql
+sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables
+之后打开系统偏好设置，选择mysql，会发现mysql服务以及重启。
+（之前这一步失败，重启后会很快关掉。重新安装后正常。）
+4.回到终端
+注意【很重要】：Command + N重新打开一个终端，输入
+Mysql -u root
+这一步失败：zsh: command not found: mysql
+
+再卸载重装。这次一定要记住密码。
+重装，记住密码，重新source ～/.bash_profile，就可以执行Mysql指令了。
+
+但每次都要source ~/.bash_profile
+才能运行mysql -u root -p，否则报错：command not found: mysql
+
+重启电脑后还是如此。记住这个问题。
+发现zsh加载的是 ~/.zshrc文件，而 ‘.zshrc’ 文件中并没有定义任务环境变量。
+在~/.zshrc文件最后，增加一行：source ~/.bash_profile
