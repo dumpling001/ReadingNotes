@@ -1,0 +1,96 @@
+第6章Django测试
+
+关闭pycharm的自动补全的话可以：
+File -- Settings -- Editor -- General -- Code Completion -- 取消勾选右侧的 ‘Show suggestions as you type’
+
+在File → Setting → Power Saving Mode 勾上这个也是可以达到类似的效果的，不过这个是pycharm的省电模式，勾上这个以后，有些颜色高亮就没有了，所以不建议用这个。
+
+还是上次usr/local/文件夹下文件全部误删，引起的问题：
+Pycharm运行.py文件报错：
+Error running 'test': Cannot run program "/usr/local/bin/python3.6" (in directory "/Users/。。。"): error=2, No such file or directory
+
+于是计划重新安装python3。
+于是准备先安装brew，再用brew安装python3（也是因为误删原因，之前安装的brew也没了。）
+
+https://brew.sh/
+运行：
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+报错：
+curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to raw.githubusercontent.com:443
+查到解决办法：
+https://stackoverflow.com/questions/48987512/ssl-connect-ssl-error-syscall-in-connection-to-github-com443
+运行：
+networksetup -setv6off Wi-Fi
+再重新运行
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+即可重新安装，不过提醒：
+==> You are using macOS 10.13.
+==> We (and Apple) do not provide support for this old version.
+This installation may not succeed.
+fatal: unable to access 'https://github.com/Homebrew/brew/': Failed to connect to github.com port 443: Operation timed out
+Failed during: git fetch --force origin
+
+试了几次都这样，web端可以打开https://github.com/Homebrew/brew/
+尝试另一种方法：
+https://raw.githubusercontent.com/Homebrew/install/master/install.sh
+把脚本复制保存到本地brew_install.sh，运行bash brew_install.sh，仍然同样报错。
+
+网上查资料，结合
+https://blog.csdn.net/asahinokawa/article/details/102693131
+和
+https://zhuanlan.zhihu.com/p/93524993
+尝试把本地bash brew_install.sh里的变量值做了如下替换：
+
+# HOMEBREW_BREW_DEFAULT_GIT_REMOTE="https://github.com/Homebrew/brew"
+HOMEBREW_BREW_DEFAULT_GIT_REMOTE="https://mirrors.ustc.edu.cn/brew.git"
+
+# HOMEBREW_CORE_DEFAULT_GIT_REMOTE="https://github.com/Homebrew/homebrew-core"
+HOMEBREW_CORE_DEFAULT_GIT_REMOTE="https://mirrors.ustc.edu.cn/homebrew-core.git"
+
+# HOMEBREW_CORE_DEFAULT_GIT_REMOTE="https://github.com/Homebrew/linuxbrew-core"
+HOMEBREW_CORE_DEFAULT_GIT_REMOTE="https://mirrors.ustc.edu.cn/linuxbrew-core.git/"
+
+实际上就是使用了镜像网站的文件。
+修改后保存，再次运行bash brew_install.sh，安装成功。
+
+接着安装指定版本的python3。6。5（目前使用的就是）。
+参考资料：https://www.cjavapy.com/article/918/
+（它可能参考的：https://stackoverflow.com/questions/51125013/how-can-i-install-a-previous-version-of-python-3-in-macos-using-homebrew）
+brew install pyenv
+报错：
+Error: Failed to download resource "pyenv"
+Download failed: https://github.com/pyenv/pyenv/archive/1.2.24.tar.gz
+重拾依然如此。
+
+最后放弃了，直接去官网找python3。6。5下载
+https://www.python.org/downloads/release/python-365/
+安装成功。
+
+再此运行，果然没有了错误：
+Error running 'test': Cannot run program "/usr/local/bin/python3.6" (in directory "。。。"): error=2, No such file or directory
+
+不过代码运行不正常。发现是
+if __name__ == "__main__":这段的缩进问题，
+以及__main__写成了main，
+修改后可以正常运行了。
+
+到底我是为什么要跟自己过不去、绕那么大个湾？早直接到官网下不就好了吗？想走捷径，结果浪费了一小时。
+
+********************
+
+单独执行tests.py报错：
+ModuleNotFoundError: No module named 'sign'
+网上查了下，说是路径问题。本来准备再研究一下，又回头看了下书后面的内容，才发现它提示了：
+千万不要单独执行tests.py测试文件，Django专门提供了test命令来运行测试。。。
+python3 manage.py test
+怎么说自己呢。。。
+
+********************
+
+错误：
+1. def test_event_models(self): 写成了 def test_event_models(selfs):
+2. self.assertTrue(result.status) 写成了 self.assertEqual(result.status)
+3. 没注意看进入Django Shell模式，而是直接进入Python3模式；报错很多，当时以为是环境问题，又要整半天。
+休息一段时间后，再去翻书看看是不是哪里看漏了，才发现书上说的是进入Django Shell模式。
+输入python3 manage.py shell,
+再输入书中示例，就OK了。
