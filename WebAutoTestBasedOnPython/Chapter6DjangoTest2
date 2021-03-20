@@ -1,0 +1,114 @@
+运行python3 manage.py test sign.tests.IndexPageTest
+有警告：
+
+/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/pymysql/cursors.py:170: Warning: (3135, "'NO_ZERO_DATE', 'NO_ZERO_IN_DATE' and 'ERROR_FOR_DIVISION_BY_ZERO' sql modes should be used with strict mode. They will be merged with strict mode in a future release.")
+  result = self._query(query)
+
+参考：
+安装MySQL my.cnf配置文件 https://blog.csdn.net/jyongchong/article/details/77862819 MAC
+How to resolve the «'NO_ZERO_DATE', 'NO_ZERO_IN_DATE' and 'ERROR_FOR_DIVISION_BY_ZERO' "sql modes should be used with strict mode» MySQL warning?
+https://df.tips/t/topic/186
+简化SQL_MODE选项的建议 http://www.tocker.ca/2013/11/01/proposal-to-simplify-sql-modes.html
+关于Mac mysql my.cnf 配置文件 https://blog.csdn.net/StillCity/article/details/88558039
+
+在 /usr/local/mysql/etc ⮀ vim my.cnf
+：q 退出
+sudo chmod 666  /usr/local/mysql/etc/my.cnf 修改为可写模式
+粘贴：
+sql-mode="STRICT_TRANS_TABLES,
+  ERROR_FOR_DIVISION_BY_ZERO,
+  NO_AUTO_CREATE_USER,
+  NO_AUTO_VALUE_ON_ZERO,
+  NO_ENGINE_SUBSTITUTION,
+  NO_ZERO_DATE,
+  NO_ZERO_IN_DATE,
+  ONLY_FULL_GROUP_BY"
+
+：wq保存退出
+sudo chmod 664  /usr/local/mysql/etc/my.cnf 修改为只读模式
+
+再运行python3 manage.py test sign.tests.IndexPageTest
+报警还在。
+
+使用sudo fs_usage | grep my.cnf找过，出现很多类似如下的结果：
+16:09:57  stat64            private/etc/my.cnf                                                               0.000011   mysql
+16:09:57  stat64            mysql-8.0.23-macos10.15-x86_64/etc/my.cnf                                        0.000015   mysql
+16:09:57  open              mysql-8.0.23-macos10.15-x86_64/etc/my.cnf                                        0.000012   mysql
+16:10:37  stat64            private/etc/my.cnf                                                               0.000019   mysql
+
+在资料
+关于mysql：my.cnf文件在macOS上的位置 https://www.codenong.com/10757169/
+提示下，打开/usr/local/mysql/support-files ⮀ vim mysql.server，查到：
+
+# If you want to affect other MySQL variables, you should make your changes
+# in the /etc/my.cnf, ~/.my.cnf or other MySQL configuration files.
+
+于是把/usr/local/mysql/etc/my.cnf的/etc/my.cnf给删掉了。
+
+参考资料https://stackoverflow.com/questions/10757169/location-of-my-cnf-file-on-macos
+This thread on the MySQL forum says:
+By default, the OS X installation does not use a my.cnf, and MySQL just uses the default values. To set up your own my.cnf, you could just create a file straight in /etc.
+OS X provides example configuration files at /usr/local/mysql/support-files/.
+And if you can't find them there, MySQLWorkbench can create them for you by:
+Opening a connection
+Selecting the 'Options File' under 'INSTANCE' in the menu.
+MySQLWorkbench will search for my.cnf and if it can't find it, it'll create it for you
+
+按照这个方法，用MySQLWorkbench创建了一个myconf文档：
+新建一个连接-》左侧点击Options File-》按照提示走下去，要输入系统密码，因为要创建my.cnf文件。
+
+然后在/etc/下查看有没有新增my.cnf，发现真的新增了，但是要sudo查看才能看到。
+
+发现没有内容，又回到MySQLWorkbench，在General中找到了sql-mode一项勾选，再apply。
+再到/etc/下查看my.cnf，发现增加了sql-mode语句。
+干得漂亮！
+
+python3 manage.py test sign.tests.IndexPageTest
+还是有警告。
+
+暂时放弃解决这个问题。
+
+最后参考https://blog.csdn.net/jaket5219999/article/details/77849213
+https://code.djangoproject.com/ticket/15940
+改设置文件：
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'sql_mode': 'traditional',
+        }
+    }
+}
+
+报警消除了。
+原先是：'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+
+官方文档对sql—mode的解释没看明白：https://docs.djangoproject.com/en/1.10/ref/databases/#mysql-sql-mode
+后来又改回去了，报错就报错吧。/etc/下的my.cnf改成了：
+[mysqld]
+sql-mode = STRICT_TRANS_TABLES, ERROR_FOR_DIVISION_BY_ZERO, NO_AUTO_CREATE_USER, NO_AUTO_VALUE_ON_ZERO, NO_ENGINE_SUBSTITUTION, NO_ZERO_DATE, NO_ZERO_IN_DATE, ONLY_FULL_GROUP_BY
+
+
+对sql-mode解释详细的有：
+https://www.php.cn/mysql-tutorials-437061.html
+https://blog.csdn.net/qq_45533841/article/details/111052704
+记下备用。
+
+mysql> select @@sql_mode;
+可以查询sql_mode
+设置全局变量：
+set @@GLOBAL.sql_mode='';
+设置局部变量：
+set sql_mode ='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+
+sudo /usr/local/mysql/support-files/mysql.server restart
+Usage: mysql.server  {start|stop|restart|reload|force-reload|status}  [ MySQL server options ]
+
+最后又改成了'sql_mode': 'traditional',因为每次运行测试用例就看到警告实在太难受了。
+
+rmdir删除空目录
+
+错误：
+/sign_index_action/ 打成了 /sing_index_action/，4个都是
+test里创建的id不能跳跃，只能按顺序1-2-3-4-5来创建。一开始就创建5-6就会报错。
+
