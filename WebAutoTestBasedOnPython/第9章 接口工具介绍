@@ -118,3 +118,27 @@ Get Request 改为 GET On Session
 
 TypeError: 'method' object is not subscriptable
 ${r.json} 改为 ${r.json()}
+
+****************************
+错误：
+Content-Type=application/x-www-form-urlencoded                        | FAIL |
+HTTPError: 500 Server Error: Internal Server Error for url: http://127.0.0.1:8000/api/user_sign/
+------------------------------------------------------------------------------
+headers=${headers}                                                    | FAIL |
+Resolving variable '${r.status_code}' failed: Variable '${r}' not found.
+
+
+原因：
+书本印刷代码排版错误：
+书中是
+    &{headers}    Create Dictionary
+Content-Type=application/x-www-form-urlencoded
+    &{payload}=    Create Dictionary    eid=21    phone=13122002211
+    ${r}=    POST On Session    sign    /user_sign/    data=${payload}
+headers=${headers}
+
+实际上是：（https://github.com/defnngj/guest/blob/master/tests/rf_test/test_if.robot）
+    &{headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded
+    &{payload}=    Create Dictionary    eid=1
+    ${r}=    Post Request    event    /add_event/    data=${payload}    headers=${headers}
+
