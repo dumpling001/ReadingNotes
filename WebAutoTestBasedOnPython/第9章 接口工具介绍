@@ -1,0 +1,120 @@
+《第9章 接口测试工具介绍》
+
+安装postman：
+1。在chrome上安装插件：chrome extention store里搜索postman，安装postman interceptor插件。
+
+2。postman官网上安装postman app。
+
+3。按照https://learning.postman.com/docs/sending-requests/capturing-request-data/interceptor/#installing-interceptor
+在app上进行配置：
+Download Interceptor in the Chrome Web Store. If you already have the extension, ensure it is version v0.2.26 or later.
+Navigate to the Postman app and click the satellite icon in the upper-right corner to Capture requests and cookies with Postman. You can then enable those two features in their respective tabs. Under Requests, change Source to Interceptor.
+Select Install Interceptor Bridge to download the Bridge, an independent executable that facilitates communication with the Interceptor.
+
+If you're on Windows or Linux, Postman will take care of everything for you. If you're on MacOS, you'll be prompted to install NodeJS if it's not already installed on your computer.
+
+Confirm Interceptor is ready to use by checking that the Interceptor connected status is green. You can now capture requests from your browser and cookies from any domain to use in Postman.
+
+****************************
+
+Postman 提交post请求后报错：
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/add_event/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+
+在settings.py里加上一句APPEND_SLASH=False就OK了
+
+****************************
+
+继续报错：
+Forbidden (CSRF cookie not set.): /api/add_event/
+[22/Mar/2021 04:32:36] "POST /api/add_event/ HTTP/1.1" 403 2857
+
+解决：
+注释掉settings.py里面的：'django.middleware.csrf.CsrfViewMiddleware',即可
+
+****************************
+https://www.jianshu.com/p/bce9077d883c
+（https://www.jianshu.com/u/63121c572702 作者_stefan__值得关注。）
+
+查看是否已安装Java8：
+在安装JMeter之前安装Java
+ ~ ⮀ java -version
+java version "1.8.0_121"
+Java(TM) SE Runtime Environment (build 1.8.0_121-b13)
+Java HotSpot(TM) 64-Bit Server VM (build 25.121-b13, mixed mode)
+ ~ ⮀ /usr/libexec/java_home -V
+Matching Java Virtual Machines (1):
+    1.8.0_121, x86_64:	"Java SE 8"	/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
+/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
+查看是否已经配置好环境变量：
+echo $JAVA_HOME
+echo $PATH
+echo $CLASSPATH
+
+
+在.bash_profile文件中进行环境变量的配置：vim ～/.bash_profile
+按i键后输入：
+export JAVA_8_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home # 等号右边的路径目录，可以通过/usr/libexec/java_home -V这个命令得到
+export JAVA_HOME=$JAVA_8_HOME # 设置一个中间变量，为了方便多个JDK版本时更换JAVA_HOME
+export PATH=$JAVA_HOME/bin:$PATH:. # 冒号前代表JDK目录下的bin目录，冒号后代表当前目录
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+按esc输入：wq保存退出
+source ~/.bash_profile
+让配置生效
+
+此时在jmeter安装目录bin文件下输入 sh jmeter，即可启动jmeter
+
+优化Jmeter启动：
+vim ～/.bash_profile
+输入：
+export JMETER_HOME=/Applications/apache-jmeter-5.4.1/
+export PATH=$JAVA_HOME/bin:$PATH:.:$JMETER_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JMETER_HOME/lib/ext/ApacheJMeter_core.jar:$JMETER_HOME/lib/jorphan.jar:$JMETER_HOME/lib/logkit-2.0.jar
+按esc键后输入：wq保存退出
+source ~/.bash_profile
+让配置生效
+
+jmeter --version可以查询了（jmeter -version会报错）
+
+此时在任意目录下输入jmeter即可启动。
+
+修改语言设置：
+/Applications/apache-jmeter-5.4.1/bin ⮀ vim jmeter.properties
+#language=en
+改为
+language=zh_CN
+重启GUI即可
+
+****************************
+https://github.com/andriyko/sublime-robot-framework-assistant
+下载安装。命令行没法连接github。只能手动下载zip文件，解压，放到合适位置：
+
+mv ../sublime-robot-framework-assistant-master .
+将上一级目录里的文件移到当前目录下：变为：
+/Applications/Sublime Text.app/Contents/sublime-robot-framework-assistant-master
+
+但是这个位置不对（看这个文档受到的启发：
+https://github.com/andriyko/sublime-robot-framework-assistant/blob/master/README.md
+Configuration
+Before yo can start using the Robot Framework Assistant, you must at least configure the settings in the User package Robot.sublime-settings file. To Open the file navigate to: Preferences | Package settings | Robot Framework Assistant | Settings - User | The default settings can be found from the Preferences | Package settings | Robot Framework Assistant | Settings - Default |）
+
+准确目标位置是：
+~/Library/Application Support/Sublime Text 3/Packages
+打开这个目录，执行：
+mv /Applications/Sublime\ Text.app/Contents/sublime-robot-framework-assistant-master .
+注意文件名里有空格的，前面需要加反斜杠。
+
+再重启Sublime，就可以在view-syntax-下看到RobotFramework syntax highlighting了。
+
+url --> urs
+from django.conf.urls import include -> missing
+}放错了地方
+不该注释的注释掉了
+该注释的没有注释
+nit(ntime) -> int(ntime)
+
+Keyword 'RequestsLibrary.Get Request' is deprecated. Please use `GET On Session` instead.
+Get Request 改为 GET On Session
+
+TypeError: 'method' object is not subscriptable
+${r.json} 改为 ${r.json()}
