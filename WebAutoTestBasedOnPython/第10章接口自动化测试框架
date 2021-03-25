@@ -1,0 +1,86 @@
+*******************
+正确：
+r = requests.get('https://api.github.com/user', auth=('user', 'pass'))
+api.github.com
+
+错误：
+r = requests.get('https://api/github.com/user', auth=('user', 'pass'))
+api/github.com
+
+*******************
+问题：
+登录https://api.github.com/user
+用正确的用户名和密码，web页面可以登录。
+在命令行出现401错误。
+
+原因未知
+
+*******************
+单元测试框架的用法：
+interface_test_unittest.py 要放在guest/sign文件夹下，跟默认生成的tests.py一个目录，然后运行：
+python3 manage.py test sign.interface_test_unittest
+
+*******************
+
+更改了settings里面的数据库名字后，直接运行python3 manage.py migrate会报错：
+django.db.utils.InternalError: (1049, "Unknown database 'guest_test'")
+
+解决办法：
+在MySQL客户端，创建一个名为guest_test的数据库。
+
+*******************
+运行：python3 pyrequest/run_tests.py
+报错：
+ImportError: Start directory is not importable: './interface'
+
+解决办法：
+在interface文件夹下增加__init__.py空文件。
+
+*********************
+
+"You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version
+for the right syntax to use near 'limit,status,address,start_time) VALUES ('1','hongmiProEvent','2000','1','wuxi',' at line 1")
+
+发现是limit的原因，字段名要用'`limit`'，可能是因为limit是MYSQL的关键字。改了就OK了。
+
+********************
+报错：
+pymysql.err.InternalError: (1364, "Field 'create_time' doesn't have a default value")
+
+解决：
+加入create_time字段。顺便参考：
+https://docs.python.org/3/library/time.html#time.localtime
+https://github.com/defnngj/pyrequest/blob/master/db_fixture/test_data.py
+学习了time的用法：
+
+import time
+
+current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+past_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()-10000000))
+future_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()+10000000))
+
+strftime的参数'%Y-%m-%d %H:%M:%S'区分大小写。
+
+****************
+报错：
+NameError: name 'now' is not defined
+
+掉了定义，补上就OK了：
+now = time.strftime('%Y-%m-%d %H_%M_%S')
+
+*********************
+报错：
+TypeError: run() missing 2 required positional arguments: 'rerun' and 'save_last_run'
+
+解决方法：
+将
+runner.run(discover)
+改为
+runner.run(discover, rerun=0, save_last_run=False)
+
+*********************
+报错：
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/add_event/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x10567a3c8>: Failed to establish a new connection: [Errno 61] Connection refused',))
+
+解决方法：
+python3 manage.py runserver
