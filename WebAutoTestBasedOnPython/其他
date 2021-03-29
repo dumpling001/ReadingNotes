@@ -1,0 +1,57 @@
+
+pip3 install djangorestframework
+django-admin startproject django_rest
+cd django_rest
+python3 manage.py startapp api
+python3 manage.py migrate
+python3 manage.py createsuperuser
+***********************
+
+报错：
+    event = models.ForeignKey(Event)
+TypeError: __init__() missing 1 required positional argument: 'on_delete'
+
+解决方法：
+event = models.ForeignKey(Event)
+改为：
+event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+on_delete=models.CASCADE 删除关联数据,与之关联也删除
+
+***********************
+报错：
+"POST /events/?name=xx&address=ss&start_time=2343&limit=12 HTTP/1.1" 400 151
+
+解决办法：
+Postman的post用法：
+在Body -> form-data里输入参数，正确结果是这样："POST /events/ HTTP/1.1" 201 xxx
+而不是Params里。
+如果在Params里输入，会变成url里的参数，并报错，如上所示。
+
+***********************
+pre-emptively: 先发制人的
+Authenticate pre-emptively：已认证用户
+
+***********************
+报错：
+"GET /events/1 HTTP/1.1" 404 5676
+
+错误原因：
+http://127.0.0.1:8000/events/1
+
+正确：
+http://127.0.0.1:8000/events/1/
+正确响应：
+"GET /events/1/ HTTP/1.1" 200 11689
+
+***********************
+报错：
+TypeError: run() missing 1 required positional argument: 'test'
+
+解决办法：
+runner = unittest.TextTestRunner初始化的时候没有加()，后修改为runner = unittest.TextTestRunner()
+就OK了。
+
+***********************
+division 写成了 divsion
+拼写类错误不少，需要特别注意。
